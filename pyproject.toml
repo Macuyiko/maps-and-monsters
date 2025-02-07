@@ -1,0 +1,13 @@
+[project]
+name = "maps-and-monsters"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=6.29.5",
+    "ipython>=8.32.0",
+    "ollama>=0.4.7",
+    "pillow>=11.1.0",
+    "scikit-learn>=1.6.1",
+]
