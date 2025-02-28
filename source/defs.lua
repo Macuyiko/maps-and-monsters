@@ -2,6 +2,7 @@
 -- Constants
 DUNGEON_WIDTH = 8
 DUNGEON_HEIGHT = 8
+TILE_SIZE = 24
 
 -- Direction vectors
 N_NORTH = {x = 0, y = -1}

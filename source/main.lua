@@ -4,11 +4,12 @@ import "defs"
 local Dungeon = import "dungeon"
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
+local menu <const> = playdate.getSystemMenu()
 
 
 local dungeon = Dungeon.new()
-dungeon.row_count = {5,2,2,2,7,1,4,5}
-dungeon.col_count = {5,4,4,2,4,3,2,4}
+dungeon.row_count = {[0]=5, [1]=2, [2]=2, [3]=2, [4]=7, [5]=1, [6]=4, [7]=5}
+dungeon.col_count = {[0]=5, [1]=4, [2]=4, [3]=2, [4]=4, [5]=3, [6]=2, [7]=4}
 
 dungeon:set_cell(vec(5, 3), C_TREASURE)
 dungeon:set_cell(vec(0, 2), C_MONSTER)
@@ -33,6 +34,25 @@ local mapFontPaths = {
 }
 local mapFont = gfx.font.newFamily(mapFontPaths)
 
+local function solve()
+    for x = 0, DUNGEON_WIDTH-1 do
+        for y = 0, DUNGEON_HEIGHT-1 do
+            local c = dungeon:cell({x=x, y=y})
+            if (c == C_MARKER or c == C_WALL or c == C_HALLWAY) then
+                dungeon:set_cell(vec(selection.x, selection.y), C_UNKNOWN)
+            end
+        end
+    end
+    dungeon:solve(false)
+end
+
+
+local function drawCross(x, y)
+    local crossPadding = 4
+    playdate.graphics.drawLine(x+crossPadding, y+crossPadding, x+TILE_SIZE-crossPadding, y+TILE_SIZE-crossPadding)
+    playdate.graphics.drawLine(x+crossPadding, y+TILE_SIZE-crossPadding, x+TILE_SIZE-crossPadding, y+crossPadding)
+end
+
 
 local function drawMap()
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
@@ -40,33 +60,32 @@ local function drawMap()
         for y = 0, DUNGEON_HEIGHT-1 do
             local c = dungeon:cell({x=x, y=y})
             if c == C_HALLWAY or c == C_UNKNOWN then
-                floorImage:draw(16*(x+1), 16*(y+1))
+                floorImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
             elseif c == C_TREASURE then
-                chestImage:draw(16*(x+1), 16*(y+1))
+                chestImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
             elseif c == C_WALL then
-                wallImage:draw(16*(x+1), 16*(y+1))
+                wallImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
             elseif c == C_MONSTER then
-                monsterImage:draw(16*(x+1), 16*(y+1))
+                monsterImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
             elseif c == C_MARKER then
-                markerImage:draw(16*(x+1), 16*(y+1))
+                markerImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
             end
         end
     end
     
     gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-    for i, v in ipairs(dungeon.row_count) do  
-        gfx.drawText(tostring(v), 0, 16*i, 16, 16, mapFont, nil, gfx.kWrapWord, gfx.kAlignRight)
-        if v == dungeon:count_cells_on_row(C_WALL, i-1) then
-            playdate.graphics.drawLine(0, 16*i, 16, 16*(i+1))
-            playdate.graphics.drawLine(16, 16*i, 0, 16*(i+1))
+    
+    for i, v in pairs(dungeon.row_count) do  
+        gfx.drawText(tostring(v), 8, TILE_SIZE*(i+1)+8, TILE_SIZE, TILE_SIZE, mapFont, nil, gfx.kWrapWord, gfx.kAlignRight)
+        if v == dungeon:count_cells_on_row(C_WALL, i) then
+            drawCross(0, TILE_SIZE*(i+1))
         end
     end
-    
-    for i, v in ipairs(dungeon.col_count) do  
-        gfx.drawText(tostring(v), 16*i, 0, 16, 16, mapFont, nil, gfx.kWrapWord, gfx.kAlignCenter)
-        if v == dungeon:count_cells_on_col(C_WALL, i-1) then
-            playdate.graphics.drawLine(16*i, 0, 16*(i+1), 16)
-            playdate.graphics.drawLine(16*i, 16, 16*(i+1), 0)
+
+    for i, v in pairs(dungeon.col_count) do  
+        gfx.drawText(tostring(v), TILE_SIZE*(i+1)+8, 8, TILE_SIZE, TILE_SIZE, mapFont, nil, gfx.kWrapWord, gfx.kAlignCenter)
+        if v == dungeon:count_cells_on_col(C_WALL, i) then
+            drawCross(TILE_SIZE*(i+1), 0)
         end
     end
 end
@@ -74,7 +93,7 @@ end
 
 local function drawSelection()
     gfx.setColor(gfx.kColorWhite)
-    gfx.drawRoundRect(16*(selection.x+1), 16*(selection.y+1), 16, 16, 2)
+    gfx.drawRoundRect(TILE_SIZE*(selection.x+1), TILE_SIZE*(selection.y+1), TILE_SIZE, TILE_SIZE, 2)
 end
 
 
@@ -104,3 +123,7 @@ function playdate.update()
         dungeon:set_cell(vec(selection.x, selection.y), C_HALLWAY)
     end
 end
+
+
+local menuSolve = menu:addMenuItem("Solve", solve)
+
