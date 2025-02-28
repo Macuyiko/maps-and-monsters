@@ -2,7 +2,10 @@
 {
     // ====== Lua Settings ======
     // The Playdate Lua runtime uses "import" instead of "require"
-    "Lua.diagnostics.globals": ["import"],
+    "Lua.diagnostics.globals": [
+        "import",
+        "C_MONSTER"
+    ],
     // Sumneko Lua type definition doesn't support callbacks/overrides yet,
     // so do this to make playdate.update() override not complain as much
     "Lua.diagnostics.severity": {
