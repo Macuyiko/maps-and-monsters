@@ -61,6 +61,7 @@ local function drawMap()
             playdate.graphics.drawLine(16, 16*i, 0, 16*(i+1))
         end
     end
+    
     for i, v in ipairs(dungeon.col_count) do  
         gfx.drawText(tostring(v), 16*i, 0, 16, 16, mapFont, nil, gfx.kWrapWord, gfx.kAlignCenter)
         if v == dungeon:count_cells_on_col(C_WALL, i-1) then
