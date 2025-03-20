@@ -9,6 +9,7 @@ function Dungeon.new()
   self.col_count = {}
   self.row_count = {}
   self.grid = {}
+  self.name = "Unknown"
   self.solved = false
   
   -- Initialize arrays

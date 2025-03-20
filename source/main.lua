@@ -1,38 +1,49 @@
 import "CoreLibs/graphics"
 import "CoreLibs/ui"
+import "CoreLibs/nineslice"
+import "CoreLibs/animator"
 import "defs"
+
 local Dungeon = import "dungeon"
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
 local menu <const> = playdate.getSystemMenu()
 
+local function loadLevel(name)
+    local level = json.decodeFile("/levels/levels.json")[name]
+    local dungeon = Dungeon.new()
+    dungeon.name = name
+    for i = 0, DUNGEON_WIDTH - 1 do dungeon.col_count[i] = level["columns"][i+1] end
+    for i = 0, DUNGEON_HEIGHT - 1 do dungeon.row_count[i] = level["rows"][i+1] end
+    for _, o in ipairs(level["chests"]) do
+        dungeon:set_cell(vec(o[1], o[2]), C_TREASURE)
+    end
+    for _, o in ipairs(level["monsters"]) do
+        dungeon:set_cell(vec(o[1], o[2]), C_MONSTER)
+    end
+    return dungeon
+end
 
-local dungeon = Dungeon.new()
-dungeon.row_count = {[0]=5, [1]=2, [2]=2, [3]=2, [4]=7, [5]=1, [6]=4, [7]=5}
-dungeon.col_count = {[0]=5, [1]=4, [2]=4, [3]=2, [4]=4, [5]=3, [6]=2, [7]=4}
-
-dungeon:set_cell(vec(5, 3), C_TREASURE)
-dungeon:set_cell(vec(0, 2), C_MONSTER)
-dungeon:set_cell(vec(7, 5), C_MONSTER)
-dungeon:set_cell(vec(0, 6), C_MONSTER)
-dungeon:set_cell(vec(2, 6), C_MONSTER)
-
+local dungeon = loadLevel("1-1")
 local selection = {x = 0, y = 0}
-
+local timesec, _ = pd.getSecondsSinceEpoch()
 
 -- Assets
-local floorImage = gfx.image.new("images/floor.png")
-local wallImage = gfx.image.new("images/wall.png")
-local markerImage = gfx.image.new("images/marker.png")
-local chestImage = gfx.image.new("images/chest.png")
-local monsterImage = gfx.image.new("images/monster.png")
+local backImage = gfx.image.new("/images/back.png")
+local floorImage = gfx.image.new("/images/floor.png")
+local wallImage = gfx.image.new("/images/wall.png")
+local markerImage = gfx.image.new("/images/marker.png")
+local chestImage = gfx.image.new("/images/chest.png")
+local monsterImage = gfx.image.new("/images/monster.png")
+local frameSlice = gfx.nineSlice.new("/images/frame.png", 8, 8, 32, 32)
 
-local mapFontPaths = {
-    [gfx.font.kVariantNormal] = "fonts/ruby_15",
-    [gfx.font.kVariantBold] = "fonts/ruby_15",
-    [gfx.font.kVariantItalic] = "fonts/ruby_15",
-}
-local mapFont = gfx.font.newFamily(mapFontPaths)
+local mapFont = gfx.font.newFamily({
+    [gfx.font.kVariantNormal] = "/fonts/ruby_15",
+    [gfx.font.kVariantBold] = "/fonts/ruby_15",
+    [gfx.font.kVariantItalic] = "/fonts/ruby_15",
+})
+
+local animator = gfx.animator.new(1000, 0, 80, pd.easingFunctions.inOutCubic)
 
 local function solve()
     for x = 0, DUNGEON_WIDTH-1 do
@@ -46,35 +57,44 @@ local function solve()
     dungeon:solve(false)
 end
 
-
 local function drawCross(x, y)
     local crossPadding = 4
-    playdate.graphics.drawLine(x+crossPadding, y+crossPadding, x+TILE_SIZE-crossPadding, y+TILE_SIZE-crossPadding)
-    playdate.graphics.drawLine(x+crossPadding, y+TILE_SIZE-crossPadding, x+TILE_SIZE-crossPadding, y+crossPadding)
+    gfx.drawLine(x+crossPadding, y+crossPadding, x+TILE_SIZE-crossPadding, y+TILE_SIZE-crossPadding)
+    gfx.drawLine(x+crossPadding, y+TILE_SIZE-crossPadding, x+TILE_SIZE-crossPadding, y+crossPadding)
 end
-
 
 local function drawMap()
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
+    
     for x = 0, DUNGEON_WIDTH-1 do
         for y = 0, DUNGEON_HEIGHT-1 do
             local c = dungeon:cell({x=x, y=y})
-            if c == C_HALLWAY or c == C_UNKNOWN then
-                floorImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
-            elseif c == C_TREASURE then
-                chestImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
-            elseif c == C_WALL then
+            if c == C_WALL then
                 wallImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
+            else
+                floorImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
+            end
+        end
+    end
+
+    for x = 0, DUNGEON_WIDTH-1 do
+        for y = 0, DUNGEON_HEIGHT-1 do
+            local c = dungeon:cell({x=x, y=y})
+            gfx.setImageDrawMode(gfx.kDrawModeCopy)
+            if c == C_TREASURE then
+                chestImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
             elseif c == C_MONSTER then
                 monsterImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
             elseif c == C_MARKER then
+                gfx.setImageDrawMode(gfx.kDrawModeBlackTransparent)
                 markerImage:draw(TILE_SIZE*(x+1), TILE_SIZE*(y+1))
             end
         end
     end
-    
+end
+
+local function drawNumbers()
     gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-    
     for i, v in pairs(dungeon.row_count) do  
         gfx.drawText(tostring(v), 8, TILE_SIZE*(i+1)+8, TILE_SIZE, TILE_SIZE, mapFont, nil, gfx.kWrapWord, gfx.kAlignRight)
         if v == dungeon:count_cells_on_row(C_WALL, i) then
@@ -90,18 +110,39 @@ local function drawMap()
     end
 end
 
-
 local function drawSelection()
     gfx.setColor(gfx.kColorWhite)
     gfx.drawRoundRect(TILE_SIZE*(selection.x+1), TILE_SIZE*(selection.y+1), TILE_SIZE, TILE_SIZE, 2)
 end
 
+local function drawStats()
+    gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+    local timesecnow, _ = pd.getSecondsSinceEpoch()
+    gfx.drawText(
+    "Level: 1-1", 
+    (DUNGEON_WIDTH+3) * TILE_SIZE, 10,
+    120, 20, mapFont, nil, gfx.kWrapWord, gfx.kAlignLeft)
+    gfx.drawText(
+    "Time: " .. tostring(timesecnow - timesec), 
+    (DUNGEON_WIDTH+3) * TILE_SIZE, 40,
+    120, 20, mapFont, nil, gfx.kWrapWord, gfx.kAlignLeft)
+end
 
-function playdate.update()
-    gfx.setBackgroundColor(gfx.kColorBlack)
-    gfx.clear()
+local function checkSolution()
+    local solved = dungeon:check_full_validity(false)
+end
+
+local function updateGame()
+    gfx.setDrawOffset(8, 8)
     drawMap()
+    drawNumbers()
     drawSelection()
+    
+    gfx.setDrawOffset(0, 0)
+    gfx.setImageDrawMode(gfx.kDrawModeBlackTransparent)
+    frameSlice:drawInRect(0, 0, (DUNGEON_WIDTH+2)*TILE_SIZE, (DUNGEON_HEIGHT+2)*TILE_SIZE)
+
+    drawStats()
     
     if pd.buttonJustPressed("up") then selection.y = selection.y - 1 end
     if pd.buttonJustPressed("down") then selection.y = selection.y + 1 end
@@ -124,6 +165,24 @@ function playdate.update()
     end
 end
 
+function updateMenu()
+    backImage:draw(0, 0)
+    local a = animator:currentValue()
+    if a > 8 then
+        frameSlice:drawInRect(40, 120-a/2, 140, a)
+    end
+end
 
+function playdate.update()
+    gfx.setBackgroundColor(gfx.kColorBlack)
+    gfx.clear()
+
+    updateMenu()
+    
+end
+
+
+local menuReturn = menu:addMenuItem("Return to Menu", solve)
+local menuReset = menu:addMenuItem("Reset Level", solve)
 local menuSolve = menu:addMenuItem("Solve", solve)
 
