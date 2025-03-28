@@ -3,6 +3,18 @@ import "CoreLibs/ui"
 import "CoreLibs/nineslice"
 import "CoreLibs/animator"
 import "defs"
+import "roomy"
+import "scene_menu"
+
+local manager = Manager()
+local main_menu = Menu()
+
+manager:enter(main_menu)
+
+function playdate.update()
+    manager:emit('update')
+    manager:emit('draw')
+end
 
 local Dungeon = import "dungeon"
 local pd <const> = playdate
@@ -165,21 +177,6 @@ local function updateGame()
     end
 end
 
-function updateMenu()
-    backImage:draw(0, 0)
-    local a = animator:currentValue()
-    if a > 8 then
-        frameSlice:drawInRect(40, 120-a/2, 140, a)
-    end
-end
-
-function playdate.update()
-    gfx.setBackgroundColor(gfx.kColorBlack)
-    gfx.clear()
-
-    updateMenu()
-    
-end
 
 
 local menuReturn = menu:addMenuItem("Return to Menu", solve)
