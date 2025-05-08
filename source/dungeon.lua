@@ -22,30 +22,30 @@ end
 
 -- Access methods
 function Dungeon:cell(pos, y)
-    if y ~= nil then
-      -- Called with x, y parameters
-      return self.grid[y * DUNGEON_WIDTH + pos]
-    elseif pos.x ~= nil then
-      -- Called with {x=x, y=y} format
-      return self.grid[pos_to_idx(pos)]
-    else
-      -- Called with {x, y} array-style format
-      return self.grid[pos[2] * DUNGEON_WIDTH + pos[1]]
-    end
+  if y ~= nil then
+    -- Called with x, y parameters
+    return self.grid[y * DUNGEON_WIDTH + pos]
+  elseif pos.x ~= nil then
+    -- Called with {x=x, y=y} format
+    return self.grid[pos_to_idx(pos)]
+  else
+    -- Called with {x, y} array-style format
+    return self.grid[pos[2] * DUNGEON_WIDTH + pos[1]]
   end
-  
-  function Dungeon:set_cell(pos, val, y)
-    if y ~= nil then
-      -- Called with x, y, val parameters
-      self.grid[pos * DUNGEON_WIDTH + val] = y
-    elseif pos.x ~= nil then
-      -- Called with {x=x, y=y} format
-      self.grid[pos_to_idx(pos)] = val
-    else
-      -- Called with {x, y} array-style format
-      self.grid[pos[2] * DUNGEON_WIDTH + pos[1]] = val
-    end
+end
+
+function Dungeon:set_cell(pos, val, y)
+  if y ~= nil then
+    -- Called with x, y, val parameters
+    self.grid[pos * DUNGEON_WIDTH + val] = y
+  elseif pos.x ~= nil then
+    -- Called with {x=x, y=y} format
+    self.grid[pos_to_idx(pos)] = val
+  else
+    -- Called with {x, y} array-style format
+    self.grid[pos[2] * DUNGEON_WIDTH + pos[1]] = val
   end
+end
 
 -- Validation helper methods
 function Dungeon:count_neighbor_walls(pos)
