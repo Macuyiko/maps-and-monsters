@@ -4,7 +4,25 @@
     // The Playdate Lua runtime uses "import" instead of "require"
     "Lua.diagnostics.globals": [
         "import",
-        "C_MONSTER"
+        "json",
+        "class",
+        "manager",
+        "scene_menu",
+        "scene_levels",
+        "scene_help",
+        "scene_game",
+        "DUNGEON_WIDTH",
+        "DUNGEON_HEIGHT",
+        "TILE_SIZE",
+        "BOARD_SIZE",
+        "NEIGHBOR_DIRS",
+        "C_WALL",
+        "C_FLOOR",
+        "C_UNKNOWN",
+        "C_MONSTER",
+        "C_TREASURE",
+        "is_on_grid",
+        "format_time"
     ],
     // Sumneko Lua type definition doesn't support callbacks/overrides yet,
     // so do this to make playdate.update() override not complain as much

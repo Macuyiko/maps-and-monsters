@@ -1,6 +1,6 @@
-name=Game
-author=
-description=
-bundleID=
+name=Maps & Monsters
+author=Seppe
+description=A port of Dungeons & Diagrams from Last Call BBS
+bundleID=com.seppe.mapsandmonsters
 version=1.0.0
 buildNumber=1

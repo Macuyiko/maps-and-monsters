@@ -1,10 +1,13 @@
-# Python-generated files
+# Playdate build output
+builds/
+*.pdx/
+.sentry-native/
+
+# Python
+.venv
 __pycache__/
 *.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
 
-# Virtual environments
-.venv
+# OS cruft
+.DS_Store
+Thumbs.db
