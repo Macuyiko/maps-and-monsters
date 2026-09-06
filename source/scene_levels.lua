@@ -1,6 +1,5 @@
 import "CoreLibs/graphics"
 import "CoreLibs/nineslice"
-import "CoreLibs/crank"
 import "roomy"
 import "defs"
 import "savedata"
@@ -77,18 +76,32 @@ end
 function Levels:moveCursor(dx, dy)
 	local x = self.cursor % COLS
 	local y = math.floor(self.cursor / COLS)
-	x = math.max(0, math.min(COLS - 1, x + dx))
-	y = math.max(0, math.min(ROWS - 1, y + dy))
-	self.cursor = y * COLS + x
+	local nx = x + dx
+	local ny = y + dy
+	if nx < 0 then
+		if self.page > 1 then
+			self.page = self.page - 1
+			nx = COLS - 1
+		else
+			nx = 0
+		end
+	elseif nx > COLS - 1 then
+		if self.page < 4 then
+			self.page = self.page + 1
+			nx = 0
+		else
+			nx = COLS - 1
+		end
+	end
+	if ny < 0 then
+		ny = 0
+	elseif ny > ROWS - 1 then
+		ny = ROWS - 1
+	end
+	self.cursor = ny * COLS + nx
 end
 
 function Levels:update(dt)
-	local ticks = pd.getCrankTicks(8)
-	if ticks ~= 0 then
-		self.page = ((self.page - 1 + ticks) % 4 + 4) % 4 + 1
-		self.cursor = 0
-	end
-
 	for dir, move in pairs(MOVES) do
 		if pd.buttonJustPressed(dir) then
 			self:moveCursor(move.x, move.y)
@@ -123,6 +136,9 @@ end
 
 function Levels:draw()
 	gfx.clear(gfx.kColorBlack)
+
+	gfx.setImageDrawMode(gfx.kDrawModeCopy)
+	frameSlice:drawInRect(GX - 12, GY - 12, GRID_W + 24, GRID_H + 24)
 
 	local keys = self:keys()
 
@@ -172,9 +188,6 @@ function Levels:draw()
 		end
 	end
 
-	gfx.setImageDrawMode(gfx.kDrawModeCopy)
-	frameSlice:drawInRect(GX - 12, GY - 12, GRID_W + 24, GRID_H + 24)
-
 	self:drawPanel(keys)
 end
 
@@ -208,5 +221,5 @@ function Levels:drawPanel(keys)
 
 	gfx.drawText("A play", PANEL_X, 180)
 	gfx.drawText("B back", PANEL_X, 194)
-	gfx.drawText("crank year", PANEL_X, 208)
+	gfx.drawText("edges: year", PANEL_X, 208)
 end

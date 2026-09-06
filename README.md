@@ -13,10 +13,10 @@ All 64 original puzzles are included, extracted from the game's own data.
 
 ## Playing
 
-- **D-pad** move the cursor (hold to repeat)
+- **D-pad** move the cursor (hold to repeat); at the grid edges of the
+  level select it changes year pages
 - **A** place or remove a wall
 - **B** place or remove an X marker (a note that a tile is floor)
-- **Crank** switch year pages in the level select, browse the menu
 - **System menu** reset the level, reveal the solution, or leave
 
 Progress and best times are saved on the device. Levels unlock in order;

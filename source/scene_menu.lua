@@ -1,7 +1,6 @@
 import "CoreLibs/graphics"
 import "CoreLibs/nineslice"
 import "CoreLibs/animator"
-import "CoreLibs/crank"
 import "roomy"
 import "savedata"
 
@@ -21,7 +20,7 @@ local bannerAnim = gfx.animator.new(1200, 0, 100, pd.easingFunctions.inOutCubic)
 local menuAnim = gfx.animator.new(1000, 0, 140, pd.easingFunctions.inOutCubic, 900)
 
 local ITEMS <const> = {"Play", "How to play", "Reset progress"}
-local MENU_X <const> = 62
+local MENU_X <const> = 104
 local MENU_Y <const> = 104
 
 function Menu:init()
@@ -46,18 +45,17 @@ function Menu:update(dt)
 		self.flashTime = self.flashTime - dt
 	end
 
-	local ticks = pd.getCrankTicks(12)
-	local moved = false
-	if pd.buttonJustPressed("up") or ticks < 0 then
+	if pd.buttonJustPressed("up") then
 		self.sel = self.sel - 1
-		moved = true
-	elseif pd.buttonJustPressed("down") or ticks > 0 then
-		self.sel = self.sel + 1
-		moved = true
-	end
-	if moved then
-		self.sel = (self.sel - 1) % #ITEMS + 1
 		self.confirmReset = false
+	elseif pd.buttonJustPressed("down") then
+		self.sel = self.sel + 1
+		self.confirmReset = false
+	end
+	if self.sel < 1 then
+		self.sel = #ITEMS
+	elseif self.sel > #ITEMS then
+		self.sel = 1
 	end
 
 	if pd.buttonJustPressed("a") then
@@ -89,7 +87,7 @@ function Menu:draw()
 
 	if bannerAnim:ended() then
 		local m = menuAnim:currentValue()
-		frameSlice:drawInRect(36, 140 - m / 2, 208, m)
+		frameSlice:drawInRect(80, 140 - m / 2, 240, m)
 	end
 
 	if menuAnim:ended() then
@@ -109,7 +107,7 @@ function Menu:draw()
 		elseif self.flashTime > 0 then
 			gfx.drawText("progress cleared", MENU_X, MENU_Y + #ITEMS * 24 + 6)
 		else
-			gfx.drawText("A select   crank browse", MENU_X, MENU_Y + #ITEMS * 24 + 6)
+			gfx.drawText("A select", MENU_X, MENU_Y + #ITEMS * 24 + 6)
 		end
 	end
 end

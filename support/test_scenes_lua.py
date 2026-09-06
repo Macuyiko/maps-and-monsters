@@ -127,7 +127,11 @@ gfx.clear = function() end
 gfx.setBackgroundColor = function() end
 gfx.setImageDrawMode = function() end
 gfx.setColor = function() end
-gfx.setDitherPattern = function() end
+gfx.setDitherPattern = function(pattern)
+    if type(pattern) ~= "number" then
+        error("setDitherPattern expects a number", 2)
+    end
+end
 gfx.setFont = function() end
 gfx.drawLine = function() end
 gfx.drawRect = function() end
@@ -290,11 +294,6 @@ function(shim, pd)
         end
     end
 
-    local function crank(delta)
-        shim.crankPos = (shim.crankPos + delta) % 360
-        pd.update()
-    end
-
     -- menu booted via main.lua
     ok(manager ~= nil and scene_game ~= nil, "scenes wired up")
     idle(3)
@@ -313,10 +312,18 @@ function(shim, pd)
     press("up")
     ok(scene_levels.cursor == 0, "cursor moves back")
 
-    crank(45)
-    ok(scene_levels.page == 2, "crank changes year page, got " .. tostring(scene_levels.page))
-    crank(-45)
-    ok(scene_levels.page == 1, "crank changes back, got " .. tostring(scene_levels.page))
+    press("right")
+    press("right")
+    press("right")
+    ok(scene_levels.cursor == 3 and scene_levels.page == 1, "cursor reaches right edge")
+    press("right")
+    ok(scene_levels.page == 2 and scene_levels.cursor == 0, "right edge moves to next year")
+    press("left")
+    ok(scene_levels.page == 1 and scene_levels.cursor == 3, "left edge moves to previous year")
+    press("left")
+    press("left")
+    press("left")
+    ok(scene_levels.cursor == 0, "cursor back at first level")
 
     -- locked level refuses to open (1-2 is locked while 1-1 unsolved)
     press("right")

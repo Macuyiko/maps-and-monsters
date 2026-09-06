@@ -1,6 +1,5 @@
 import "CoreLibs/graphics"
 import "CoreLibs/nineslice"
-import "CoreLibs/crank"
 import "roomy"
 import "defs"
 
@@ -64,16 +63,15 @@ function Help:enter()
 end
 
 function Help:update(dt)
-	local ticks = pd.getCrankTicks(12)
 	if pd.buttonJustPressed("b") then
 		manager:enter(scene_menu)
-	elseif pd.buttonJustPressed("a") or pd.buttonJustPressed("right") or pd.buttonJustPressed("down") or ticks > 0 then
+	elseif pd.buttonJustPressed("a") or pd.buttonJustPressed("right") or pd.buttonJustPressed("down") then
 		if self.page < #PAGES then
 			self.page = self.page + 1
 		else
 			manager:enter(scene_menu)
 		end
-	elseif pd.buttonJustPressed("left") or pd.buttonJustPressed("up") or ticks < 0 then
+	elseif pd.buttonJustPressed("left") or pd.buttonJustPressed("up") then
 		if self.page > 1 then
 			self.page = self.page - 1
 		end
@@ -100,6 +98,7 @@ function Help:draw()
 			for c, cell in ipairs(row) do
 				local px = dx + (c - 1) * TILE_SIZE
 				local py = dy + (r - 1) * TILE_SIZE
+				gfx.setImageDrawMode(gfx.kDrawModeCopy)
 				floorImage:draw(px, py)
 				gfx.setImageDrawMode(gfx.kDrawModeCopy)
 				if cell == "#" then

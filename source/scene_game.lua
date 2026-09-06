@@ -162,6 +162,10 @@ function Game:draw()
 		return
 	end
 
+	gfx.setImageDrawMode(gfx.kDrawModeCopy)
+	frameSlice:drawInRect(0, 0, BOARD_X * 2 + BOARD_SIZE, BOARD_Y * 2 + BOARD_SIZE)
+
+	gfx.setImageDrawMode(gfx.kDrawModeCopy)
 	for y = 0, DUNGEON_HEIGHT - 1 do
 		for x = 0, DUNGEON_WIDTH - 1 do
 			local px = BOARD_X + x * TILE_SIZE
@@ -226,9 +230,6 @@ function Game:draw()
 		gfx.drawRoundRect(BOARD_X + self.selection.x * TILE_SIZE, BOARD_Y + self.selection.y * TILE_SIZE, TILE_SIZE, TILE_SIZE, 3)
 	end
 
-	gfx.setImageDrawMode(gfx.kDrawModeCopy)
-	frameSlice:drawInRect(0, 0, BOARD_X * 2 + BOARD_SIZE, BOARD_Y * 2 + BOARD_SIZE)
-
 	self:drawPanel()
 
 	if self.won then
@@ -267,7 +268,7 @@ function Game:drawWinOverlay()
 	gfx.setColor(gfx.kColorBlack)
 	gfx.setDitherPattern(0.5)
 	gfx.fillRect(0, 0, 240, 240)
-	gfx.setDitherPattern()
+	gfx.setDitherPattern(1)
 
 	gfx.setImageDrawMode(gfx.kDrawModeCopy)
 	frameSlice:drawInRect(48, 64, 144, 112)
