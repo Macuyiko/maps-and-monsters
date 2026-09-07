@@ -16,7 +16,21 @@ local floorImage = gfx.image.new("/images/floor")
 local wallImage = gfx.image.new("/images/wall")
 local markerImage = gfx.image.new("/images/marker")
 local chestImage = gfx.image.new("/images/chest")
-local monsterImage = gfx.image.new("/images/monster")
+local monsterImages = {monster = gfx.image.new("/images/monster")}
+local function monsterImageFor(name)
+	if name == nil then
+		return monsterImages.monster
+	end
+	local img = monsterImages[name]
+	if img == nil then
+		img = gfx.image.new("/images/monsters/" .. name)
+		if img == nil then
+			img = monsterImages.monster
+		end
+		monsterImages[name] = img
+	end
+	return img
+end
 local frameSlice = gfx.nineSlice.new("/images/frame", 8, 8, 32, 32)
 local bigFont = gfx.font.new("/fonts/ruby_15")
 local smallFont = gfx.font.new("/fonts/topaz_serif_8")
@@ -187,7 +201,7 @@ function Game:draw()
 				chestImage:draw(px, py)
 			elseif c == C_MONSTER then
 				gfx.setImageDrawMode(gfx.kDrawModeCopy)
-				monsterImage:draw(px, py)
+				monsterImageFor(d.monsterType):draw(px, py)
 			elseif c == C_FLOOR then
 				gfx.setImageDrawMode(gfx.kDrawModeBlackTransparent)
 				markerImage:draw(px, py)
@@ -247,13 +261,13 @@ function Game:drawPanel()
 	gfx.drawText("time " .. format_time(self.time), PANEL_X, 66)
 
 	gfx.setImageDrawMode(gfx.kDrawModeCopy)
-	monsterImage:draw(PANEL_X, 88)
+	monsterImageFor(d.monsterType):draw(PANEL_X, 88)
 	gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
 	gfx.drawText(d.monsterType, PANEL_X + TILE_SIZE + 6, 94)
 
 	if d.bossPos ~= nil then
 		gfx.setImageDrawMode(gfx.kDrawModeCopy)
-		monsterImage:draw(PANEL_X, 118)
+		monsterImageFor(d.bossType):draw(PANEL_X, 118)
 		gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
 		gfx.drawText("boss " .. d.bossType, PANEL_X + TILE_SIZE + 6, 124)
 	end
