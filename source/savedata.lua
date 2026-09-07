@@ -13,6 +13,9 @@ function SavedData.load()
 		if data.solved == nil then
 			data.solved = {}
 		end
+		if data.progress == nil then
+			data.progress = {}
+		end
 	end
 	return data
 end
@@ -58,6 +61,24 @@ function SavedData.solvedCount()
 end
 
 function SavedData.resetProgress()
-	data = {solved = {}}
+	data = {solved = {}, progress = {}}
 	SavedData.write()
+end
+
+function SavedData.getProgress(key)
+	return SavedData.load().progress[key]
+end
+
+function SavedData.saveProgress(key, grid, time, cheated)
+	local d = SavedData.load()
+	d.progress[key] = {grid = grid, time = time, cheated = cheated}
+	SavedData.write()
+end
+
+function SavedData.clearProgress(key)
+	local d = SavedData.load()
+	if d.progress[key] ~= nil then
+		d.progress[key] = nil
+		SavedData.write()
+	end
 end

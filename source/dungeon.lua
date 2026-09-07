@@ -3,7 +3,7 @@ import "defs"
 Dungeon = {}
 Dungeon.__index = Dungeon
 
-function Dungeon.new(level, key)
+function Dungeon.new(level, key, progress)
 	local self = setmetatable({}, Dungeon)
 	self.key = key
 	self.name = level.name
@@ -29,7 +29,20 @@ function Dungeon.new(level, key)
 		self:set_cell(m[1], m[2], C_MONSTER)
 	end
 	self.solution = level.solution
+	if progress ~= nil and progress.grid ~= nil and #progress.grid == DUNGEON_WIDTH * DUNGEON_HEIGHT then
+		for i = 0, DUNGEON_WIDTH * DUNGEON_HEIGHT - 1 do
+			self.grid[i] = progress.grid:sub(i + 1, i + 1)
+		end
+	end
 	return self
+end
+
+function Dungeon:serialize_grid()
+	local chars = {}
+	for i = 0, DUNGEON_WIDTH * DUNGEON_HEIGHT - 1 do
+		chars[i + 1] = self.grid[i]
+	end
+	return table.concat(chars)
 end
 
 function Dungeon:cell(x, y)

@@ -393,7 +393,7 @@ function(shim, pd)
     ok(game.dungeon.key == "1-2", "A advances to 1-2")
 
     -- system menu: return to levels
-    shim.menuItems["Return to levels"]()
+    shim.menuItems["Levels"]()
     ok(manager._scenes[#manager._scenes] == scene_levels, "system menu returns to levels")
     press("b")
     ok(manager._scenes[#manager._scenes] == scene_menu, "B returns to menu")

@@ -35,10 +35,28 @@ local MOVES = {
 	right = {x = 1, y = 0}
 }
 
-local function draw_check(x, y, color)
+local function has_grid_progress(key)
+	local prog = SavedData.getProgress(key)
+	if prog == nil or prog.grid == nil or #prog.grid ~= DUNGEON_WIDTH * DUNGEON_HEIGHT then
+		return false
+	end
+	return prog.grid:find(C_WALL, 1, true) ~= nil
+end
+
+local function draw_grid_preview(x, y, key, selected)
+	local prog = SavedData.getProgress(key)
+	local color
+	if selected then
+		color = gfx.kColorBlack
+	else
+		color = gfx.kColorWhite
+	end
 	gfx.setColor(color)
-	gfx.drawLine(x, y + 3, x + 2, y + 5)
-	gfx.drawLine(x + 2, y + 5, x + 7, y)
+	for i = 0, DUNGEON_WIDTH * DUNGEON_HEIGHT - 1 do
+		if prog.grid:sub(i + 1, i + 1) == C_WALL then
+			gfx.fillRect(x + 2 + (i % DUNGEON_WIDTH) * 4, y + 2 + math.floor(i / DUNGEON_WIDTH) * 4, 4, 4)
+		end
+	end
 end
 
 function Levels:init()
@@ -154,7 +172,6 @@ function Levels:draw()
 		local y = GY + row * (CELL + GAP)
 		local key = keys[i + 1]
 		local unlocked = self:isUnlocked(key)
-		local solved = SavedData.isSolved(key)
 		local selected = i == self.cursor
 
 		if selected then
@@ -167,25 +184,22 @@ function Levels:draw()
 		end
 
 		local label
-		if not unlocked then
-			label = "?"
+		if has_grid_progress(key) then
+			label = nil
+			draw_grid_preview(x, y, key, selected)
+			gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
 		else
 			label = tostring(tonumber(key:match("%d+-(%d+)")))
 		end
 
-		gfx.setFont(bigFont)
-		local lw, lh = gfx.getTextSize(label)
-		gfx.drawText(label, x + math.floor((CELL - lw) / 2), y + math.floor((CELL - lh) / 2) - 2)
-		gfx.setFont(smallFont)
-		gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-
-		if solved then
-			local color = gfx.kColorBlack
-			if not selected then
-				color = gfx.kColorWhite
-			end
-			draw_check(x + CELL - 12, y + 4, color)
+		if label ~= nil then
+			gfx.setFont(bigFont)
+			local lw, lh = gfx.getTextSize(label)
+			gfx.drawText(label, x + math.floor((CELL - lw) / 2), y + math.floor((CELL - lh) / 2) - 2)
+			gfx.setFont(smallFont)
+			gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
 		end
+
 	end
 
 	self:drawPanel(keys)

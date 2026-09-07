@@ -87,8 +87,10 @@ def rule_check(grid, rows, columns):
             if dead_end and not monster:
                 problems.append(f"dead end without monster at {x},{y}")
 
-    # Treasure rooms: each chest in exactly one all-floor 3x3 with one entrance
+    # Treasure rooms: each chest in exactly one all-floor 3x3 with one entrance,
+    # and no two chests sharing the same room
     room_tiles = set()
+    room_owners = {}
     for y in range(GRID):
         for x in range(GRID):
             if cell(x, y) != CELL_TREASURE:
@@ -103,6 +105,12 @@ def rule_check(grid, rows, columns):
                 problems.append(f"chest at {x},{y} has {len(placements)} room placements")
                 continue
             rx, ry = placements[0]
+            if (rx, ry) in room_owners:
+                problems.append(
+                    f"chests at {room_owners[(rx, ry)]} and {x},{y} share room at {rx},{ry}"
+                )
+                continue
+            room_owners[(rx, ry)] = (x, y)
             for dy in range(3):
                 for dx in range(3):
                     room_tiles.add((rx + dx, ry + dy))

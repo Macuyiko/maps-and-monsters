@@ -73,28 +73,45 @@ function Game:enter(previous, key)
 	self:loadLevel(key)
 	local menu = pd.getSystemMenu()
 	menu:addMenuItem("Reset level", function()
+		SavedData.clearProgress(self.dungeon.key)
 		self:resetLevel()
 	end)
 	menu:addMenuItem("Show solution", function()
 		self:showSolution()
 	end)
-	menu:addMenuItem("Return to levels", function()
+	menu:addMenuItem("Levels", function()
 		manager:enter(scene_levels)
 	end)
 end
 
 function Game:leave()
+	self:saveProgress()
 	pd.getSystemMenu():removeAllMenuItems()
 end
 
 function Game:loadLevel(key)
-	self.dungeon = Dungeon.new(LevelData.get(key), key)
+	local progress = SavedData.getProgress(key)
+	self.dungeon = Dungeon.new(LevelData.get(key), key, progress)
+	if progress ~= nil then
+		self.time = progress.time or 0
+		self.cheated = progress.cheated or false
+	else
+		self.time = 0
+		self.cheated = false
+	end
 	self.selection = {x = 0, y = 0}
 	self.holdTime = {}
 	self.repeatTime = {}
-	self.time = 0
-	self.won = false
-	self.cheated = false
+	-- Resuming an already-solved level goes straight to the win overlay so
+	-- the timer stays frozen.
+	self.won = SavedData.isSolved(key) and progress ~= nil
+end
+
+function Game:saveProgress()
+	if self.dungeon == nil or self.won then
+		return
+	end
+	SavedData.saveProgress(self.dungeon.key, self.dungeon:serialize_grid(), self.time, self.cheated)
 end
 
 function Game:resetLevel()
@@ -117,6 +134,7 @@ function Game:checkWin()
 	if self.dungeon:counts_exact() and self.dungeon:check_full_validity() then
 		self.won = true
 		SavedData.record(self.dungeon.key, math.floor(self.time), self.cheated)
+		SavedData.saveProgress(self.dungeon.key, self.dungeon:serialize_grid(), self.time, self.cheated)
 	end
 end
 
@@ -163,9 +181,11 @@ function Game:update(dt)
 
 	if pd.buttonJustPressed("a") then
 		self.dungeon:toggle_wall(self.selection.x, self.selection.y)
+		self:saveProgress()
 		self:checkWin()
 	elseif pd.buttonJustPressed("b") then
 		self.dungeon:toggle_marker(self.selection.x, self.selection.y)
+		self:saveProgress()
 	end
 end
 
@@ -229,11 +249,11 @@ function Game:draw()
 		local text = tostring(d.col_count[i])
 		local w, h = gfx.getTextSize(text)
 		local tx = BOARD_X + i * TILE_SIZE + math.floor((TILE_SIZE - w) / 2)
-		local ty = BOARD_Y - 6 - h
+		local ty = BOARD_Y - 5 - h
 		gfx.drawText(text, tx, ty)
 		local status = d:col_status(i)
 		if status == 0 then
-			draw_check(BOARD_X + i * TILE_SIZE + TILE_SIZE - 9, BOARD_Y - 6)
+			draw_check(BOARD_X + i * TILE_SIZE + TILE_SIZE - 9, BOARD_Y - 7)
 		elseif status == 1 then
 			draw_cross(tx + 1, ty + 1, 8)
 		end
@@ -272,8 +292,6 @@ function Game:drawPanel()
 		gfx.drawText("boss " .. d.bossType, PANEL_X + TILE_SIZE + 6, 124)
 	end
 
-	gfx.drawText("solved " .. SavedData.solvedCount() .. "/" .. LevelData.count(), PANEL_X, 152)
-
 	gfx.drawText("A wall", PANEL_X, 196)
 	gfx.drawText("B mark", PANEL_X, 210)
 end
@@ -294,14 +312,14 @@ function Game:drawWinOverlay()
 	gfx.drawText(title, 120 - math.floor(w / 2), 80)
 
 	gfx.setFont(smallFont)
-	local lines
+	local timeText = "time " .. format_time(self.time)
+	w = gfx.getTextSize(timeText)
+	gfx.drawText(timeText, 120 - math.floor(w / 2), 106)
 	if self.cheated then
-		lines = "time " .. format_time(self.time) .. " (solution used)"
-	else
-		lines = "time " .. format_time(self.time)
+		local note = "(solution used)"
+		w = gfx.getTextSize(note)
+		gfx.drawText(note, 120 - math.floor(w / 2), 120)
 	end
-	w = gfx.getTextSize(lines)
-	gfx.drawText(lines, 120 - math.floor(w / 2), 106)
 
 	local hint
 	if LevelData.next(self.dungeon.key) ~= nil then
